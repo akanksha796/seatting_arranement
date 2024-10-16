@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Data Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Traffic Data Analysis</h1>
+    <div class="controls">
+        <input type="number" id="carCount" placeholder="Car Count" required>
+        <input type="number" id="speed" placeholder="Speed (km/h)" required>
+        <input type="text" id="entryTime" placeholder="Entry Time (HH:MM)" required>
+        <input type="text" id="exitTime" placeholder="Exit Time (HH:MM)" required>
+        <button onclick="addTrafficData()">Add Data</button>
+    </div>
+
+    <h2>Traffic Data</h2>
+    <table id="trafficDataTable">
+        <thead>
+            <tr>
+                <th>Car Count</th>
+                <th>Speed (km/h)</th>
+                <th>Entry Time</th>
+                <th>Exit Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Traffic data will be added here -->
+        </tbody>
+    </table>
+
+    <h2>Traffic Analysis</h2>
+    <button onclick="analyzeTraffic()">Analyze Traffic</button>
+    <div id="analysisResults"></div>
+
+    <script>
+        // Dynamic array to hold traffic data
+        const trafficData = [];
+
+        // Function to add traffic data
+        function addTrafficData() {
+            const carCount = parseInt(document.getElementById('carCount').value);
+            const speed = parseInt(document.getElementById('speed').value);
+            const entryTime = document.getElementById('entryTime').value;
+            const exitTime = document.getElementById('exitTime').value;
+
+            if (isNaN(carCount) || isNaN(speed) || !entryTime || !exitTime) {
+                alert('Please enter valid data.');
+                return;
+            }
+
+            // Add to the traffic data array
+            trafficData.push({ carCount, speed, entryTime, exitTime });
+            renderTrafficData();
+            clearInputs();
+        }
+
+        // Function to render the traffic data table
+        function renderTrafficData() {
+            const tableBody = document.querySelector('#trafficDataTable tbody');
+            tableBody.innerHTML = '';
+
+            trafficData.forEach(data => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.carCount}</td>
+                    <td>${data.speed}</td>
+                    <td>${data.entryTime}</td>
+                    <td>${data.exitTime}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Function to analyze traffic data
+        function analyzeTraffic() {
+            if (trafficData.length === 0) {
+                alert('No traffic data available for analysis.');
+                return;
+            }
+
+            // Aggregate total cars and average speed
+            let totalCars = 0;
+            let totalSpeed = 0;
+
+            trafficData.forEach(data => {
+                totalCars += data.carCount;
+                totalSpeed += data.speed;
+            });
+
+            const averageSpeed = (totalSpeed / trafficData.length).toFixed(2);
+
+            // Analyze peak hours based on entry times
+            const peakHours = {};
+            trafficData.forEach(data => {
+                const hour = data.entryTime.split(':')[0];
+                if (!peakHours[hour]) {
+                    peakHours[hour] = 0;
+                }
+                peakHours[hour] += data.carCount;
+            });
+
+            // Find the hour with the maximum traffic
+            const peakHour = Object.keys(peakHours).reduce((a, b) => peakHours[a] > peakHours[b] ? a : b);
+
+            // Display results
+            const resultsDiv = document.getElementById('analysisResults');
+            resultsDiv.innerHTML = `
+                <p>Total Cars: ${totalCars}</p>
+                <p>Average Speed: ${averageSpeed} km/h</p>
+                <p>Peak Hour: ${peakHour}:00 with ${peakHours[peakHour]} cars</p>
+            `;
+        }
+
+        // Function to clear input fields
+        function clearInputs() {
+            document.getElementById('carCount').value = '';
+            document.getElementById('speed').value = '';
+            document.getElementById('entryTime').value = '';
+            document.getElementById('exitTime').value = '';
+        }
+    </script>
+
+</body>
+</html>

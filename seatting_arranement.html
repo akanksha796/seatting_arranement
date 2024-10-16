@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Theater Seating Arrangement</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .seat {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            display: inline-block;
+            text-align: center;
+            line-height: 40px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .available {
+            background-color: #a2f0a2;
+        }
+        .occupied {
+            background-color: #f0a2a2;
+        }
+        .selected {
+            background-color: #ffa500;
+        }
+        .header {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">Movie Theater Seating Arrangement</div>
+    <div id="seatingArrangement"></div>
+
+    <div class="controls">
+        <input type="number" id="groupSize" placeholder="Group Size" min="1" required>
+        <button onclick="bookSeats()">Book Seats</button>
+        <button onclick="cancelSeats()">Cancel Seats</button>
+    </div>
+
+    <script>
+        // 2D array to represent seating
+        const rows = 5;
+        const columns = 5;
+        const seating = Array.from({ length: rows }, () => Array(columns).fill(0)); // 0 for available, 1 for occupied
+        let selectedSeats = [];
+
+        // Function to render the seating arrangement
+        function renderSeating() {
+            const container = document.getElementById('seatingArrangement');
+            container.innerHTML = ''; // Clear the container
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < columns; j++) {
+                    const seat = document.createElement('div');
+                    seat.className = 'seat ' + (seating[i][j] === 0 ? 'available' : 'occupied') + (selectedSeats.includes(`${i},${j}`) ? ' selected' : '');
+                    seat.innerText = `(${i+1}, ${j+1})`;
+                    seat.onclick = () => selectSeat(i, j);
+                    container.appendChild(seat);
+                }
+                container.appendChild(document.createElement('br')); // New line for the next row
+            }
+        }
+
+        // Function to select/deselect a seat
+        function selectSeat(row, column) {
+            const seatKey = `${row},${column}`;
+            if (seating[row][column] === 0) {
+                // Select the seat if available
+                if (!selectedSeats.includes(seatKey)) {
+                    selectedSeats.push(seatKey);
+                } else {
+                    selectedSeats = selectedSeats.filter(seat => seat !== seatKey);
+                }
+            }
+            renderSeating(); // Re-render the seating arrangement
+        }
+
+        // Function to book seats
+        function bookSeats() {
+            const groupSize = parseInt(document.getElementById('groupSize').value);
+            if (isNaN(groupSize) || groupSize <= 0) {
+                alert('Please enter a valid group size.');
+                return;
+            }
+
+            // Check if selected seats are contiguous
+            const seatIndices = selectedSeats.map(seat => seat.split(',').map(Number));
+            const groupedSeats = groupContiguousSeats(seatIndices);
+
+            if (groupedSeats.length === 0 || groupedSeats.some(group => group.length < groupSize)) {
+                alert('Please select contiguous seats for your group.');
+                return;
+            }
+
+            // Book the seats
+            groupedSeats.forEach(group => {
+                if (group.length >= groupSize) {
+                    for (let i = 0; i < groupSize; i++) {
+                        const [row, column] = group[i];
+                        seating[row][column] = 1; // Mark as occupied
+                    }
+                }
+            });
+
+            selectedSeats = []; // Clear selected seats
+            renderSeating(); // Re-render the seating arrangement
+        }
+
+        // Function to cancel seats
+        function cancelSeats() {
+            const groupSize = parseInt(document.getElementById('groupSize').value);
+            if (isNaN(groupSize) || groupSize <= 0) {
+                alert('Please enter a valid group size.');
+                return;
+            }
+
+            const seatIndices = selectedSeats.map(seat => seat.split(',').map(Number));
+            seatIndices.forEach(([row, column]) => {
+                seating[row][column] = 0; // Mark as available
+            });
+
+            selectedSeats = []; // Clear selected seats
+            renderSeating(); // Re-render the seating arrangement
+        }
+
+        // Function to group contiguous seats
+        function groupContiguousSeats(seatIndices) {
+            const groups = [];
+            seatIndices.forEach(([row, column]) => {
+                const group = [];
+
+                // Check left
+                for (let j = column; j >= 0 && seating[row][j] === 0; j--) {
+                    group.push([row, j]);
+                }
+                // Check right
+                for (let j = column + 1; j < columns && seating[row][j] === 0; j++) {
+                    group.push([row, j]);
+                }
+                if (group.length > 0) {
+                    groups.push(group);
+                }
+            });
+            return groups;
+        }
+
+        // Initial rendering
+        renderSeating();
+    </script>
+
+</body>
+</html>
